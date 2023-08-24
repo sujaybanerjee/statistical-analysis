@@ -1,0 +1,121 @@
+---
+title: "Final Project"
+author: "Sujay Banerjee and Olivia Chen"
+date: "2022-12-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#### MATH 0116 Final Project
+#### Professor Alex Lyford
+##### “We have neither given nor received unauthorized aid on this assignment”
+##### OC, SB
+
+### **Introduction**
+  
+        	For this project, we were interested in researching if the social satisfaction in terms of friendships of Middlebury students changed over their 4 years at college. We asked this question because we agree that having strong friendships is integral to a high quality of life for any college student. We also were often warned that our friendships would change a lot over the course of our college careers and were wondering if our satisfaction with said friendships would change in tandem. Thus, we proposed our research question to help us better understand if and how social satisfaction changes throughout college. Our data was collected via a survey emailed to all students graduating in spring 2023 (We); we advertised our survey as taking around 30 seconds and included a short blurb explaining what data we were collecting. We had four questions (1 question for each year) asking students to rate their social satisfaction on a scale of 1 (awful) to 10 (great). Out of our survey responses, percentages for each number 1-10 for freshman year were, respectively, 2.3% each for both 1 and 4, 4.5% for 2, 3, 5, and 9, 22.7% for 6, 20.5% each for 7 and 8, and 13.6% for 10. For sophomore year, they were (again, 1-10): 2.3% for both 1 and 2, 4.5% for 3, 11.4% for 4, 13.6% for 5, 22.7% for 6, 6.8% for 7, and 18.2% for 8, 9.1% each for 9 and 10. Junior year had percentages of ratings 1-10 at 0% each for 1 and 2, 2.3% each for 3 and 4, 4.5% for 5, 11.4% for 6, 15.9% for 7, 20.5% for 8, 27.3% for 9, and 15.9% for 10. Finally, senior year came in at 0% each for 1 and 4, 4.5% each for 2, 3, and 6, 2.3% for 5, 9.1% for 7, 13.6% for 8, 20.5% for 9, and 40.9% for 10.
+        	
+
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+
+friends <- read.csv("/Users/suj/Downloads/Copy of Social Satisfaction Survey (Responses) - Form Responses 1.csv")
+friend_2 <- read.csv("/Users/suj/Downloads/FriendGroupData.csv")
+
+
+```
+
+```{r}
+friendGroup <- friends %>%
+  pivot_longer(-ID,
+               names_to = "Year",
+               values_to = "Satisfaction")
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+ggplot(friend_2) +
+  geom_boxplot(aes(x = factor(Year), y = Rating))
+
+#Box plots showing the distribution of social satisfaction ratings over the years
+
+```
+
+### **Methods**
+
+        	To answer our question, we used a repeated measures ANOVA test. We made this choice because our data set consisted of responses from different people that had each person measured 4 times total for a singular dependent variable, social satisfaction. Thus, instead of a one-way ANOVA, which would only take up to two measurements per person, we need a test that will be able to use all four. We used this test to determine if there was a statistically significant difference between the change in happiness, which we determined by taking the absolute value of the differences between each person’s responses to the four questions.  
+          
+```{r}
+#Assumptions
+
+#1) Data are collected with randomization and independence
+```
+  
+    The first assumption for a repeated ANOVA test is that values are independent: our data fulfills this, as one person’s response shouldn’t inform another person’s so as long as the participants in our survey were random, which they should be given how we distributed our survey. It is possible if there was a particularly tumultuous friendship one year, both parties would feel inclined to fill out the survey. However, that would be dependent on both/all people seeing and reading the email and then not being too busy to take it. Thus, we don’t think this is likely and consider our data to be independent. 
+
+```{r}
+#2) Check for  significant outliers
+identify_outliers(Satisfaction, data = friendGroup)
+
+```
+    
+    The next assumption is that there are no significant outliers. To determine this, we use the identify_outliers() function and found that there were two outliers. We decided that this data is important to keep because these two students had a bad year, but we expected some students to have terrible years. Removing this data loses a crucial part of our data because it is a less valid claim to say that there is no change is social satisfaction when we are removing the outliers of students who had bad years.
+
+```{r}
+#3) Check for normality
+friendGroup %>%
+  group_by(Year) %>%
+  shapiro_test(Satisfaction)
+
+```
+
+    The next assumption is normality: we determined with a Shapiro-Wilkes test that only our data for sophomore year is normally distributed. However, we decided to proceed anyway because we have a large enough sample size.
+    
+```{r}
+# 4) Check for sphericity
+```
+  
+          The final assumption is sphericity: the differences between all combinations of years have similar variance. We know this is true, because our data only goes 1-10 so the largest difference we could observe would be 9, while the smallest difference we could observe would be 0. Thus, the only way there could be non-spherical variance would be if all of the data combinations had the same or close to the same extreme difference (all around 9, for example) and then there were a handful of outlier points with the opposite extreme variance (4 with a difference of 0, for example); these outliers would damage the sphericity of the data. However, we can look at our data and see that this is not the case, as the number of differences that are very low or very high are low and there is a good range of differences for the combinations.  
+
+          We were unable to determine an adequate sample size from our alpha and beta error percentages, because of the nature of our data as being a difference between four response numbers. This makes it difficult to properly determine what a sufficient sample size would be, as we are conducting a repeated measures ANOVA test. Thus, we just used the number of responses we obtained from the survey. The null hypothesis we are testing our data against is no change of social satisfaction between all four years of college (0). However, it is important to note that in conducting our survey, we had to send the email out to participants twice, as the original email was sent without a subject line. In order to maximize survey responses, in case seniors would see the subject-less email and disregard it, we sent the email out again approximately four days later with a subject. This possibly could affect the randomness of our sample of responses, as participants who responded after the Monday email could be seeing the survey for a second time. However, we don’t think this will be an issue, as it is likely the first email wasn’t even read by most seniors and if it was and they decided not to take it, then they probably wouldn’t change their mind the second time around.  
+
+
+### **Results**
+
+      Our repeated measures ANOVA test calculated a p value of 6.18x​​10-5, which indicates a 6.18x​​10-5 likelihood of seeing a value equal to or more extreme than than our f-value if the null hypothesis of a difference of 0 for all combinations of years is true. This is a very low likelihood, which means we can reject our null hypothesis and conclude that there is a significant difference between the null hypothesis and at least one mean. Our f-statistic of 7.845 indicates that the means for each combination of years are different from one another; this also means that we can reject the null hypothesis of no change. 
+    
+```{r}
+library(rstatix)
+
+g <- aov(Satisfaction ~ Year + Error(ID), data = friendGroup)
+summary(g)
+```
+
+ Looking at all the other matched-pairs t-tests, the only combinations of years in which we failed to reject the null hypothesis of 0 change in social satisfaction ratings was between freshman and sophomore year and junior and senior year. The p-value for the t-test comparing freshman and sophomore years is 0.3656, meaning that we fail to reject the null hypothesis of there being no difference between these two years. Also, looking at the 95% confidence interval for freshman and sophomore year, 0 is contained within the range, which means that is plausible for their to be no mean difference. There was a significant difference in social satisfaction between freshman and junior year (p-value = 0.0154). 0 is not contained within the 95% confidence interval, meaning that it is not plausible for their to be no mean difference in social satisfaction. There was a very significant difference in social satisfaction between freshman and senior year (p-value = 0.0008). The 95% confidence interval does not contain 0, so we can reject the null hypothesis that there is no change in social satisfaction. Looking at sophomore and junior year, there is also a significant difference in social satisfaction (p-value = 0.0006). There is the most significant difference between sophomore and senior year (p-value = 8.417x10-5). Finally, between junior and senior year, there is no significant difference in social satisfaction (p-value = 0.1949). The 95% confidence interval contains 0, indicating that it is plausible that there is no change in social satisfaction. 
+```{r}
+#Other year comparisons
+t.test(friends$Freshman, friends$Sophomore, paired = TRUE)
+t.test(friends$Freshman, friends$Junior, paired = TRUE)
+t.test(friends$Freshman, friends$Senior, paired = TRUE)
+t.test(friends$Sophomore, friends$Junior, paired = TRUE)
+t.test(friends$Sophomore, friends$Senior, paired = TRUE)
+t.test(friends$Junior, friends$Senior, paired = TRUE)
+
+```
+
+### **Conclusion**
+
+      Using our data from the survey we sent out to the senior class on their social satisfaction at Middlebury, we completed a repeated measures ANOVA that allowed us to conclude that there was a significant difference in at least one of our means from 0; this is further confirmed with our large f-statistic. Thus, since our null hypothesis was just a change of 0 for all combinations of years, on this test alone we can reject our null. However, to determine which means were significantly different from the null hypothesis, we performed individual matched-pairs t tests for each of the combinations of years. Of these t tests, all combinations had a statistically significant difference from 0 except freshman to sophomore year and junior to senior year. This makes sense because even though some people might have unique circumstances or turbulent relationships, the difference is only one year, which isn’t enough for most people to experience a significant change in their friendships. For each combination of years except freshman-sophomore, the t statistic (difference between each mean) is negative, meaning that there was an increase in social satisfaction from the earlier to the later year. Although our hypothesis wasn’t testing for increase or decrease in social satisfaction, this finding can be considered to be good–students are getting more satisfaction from their friendships as they age here at Middlebury. The COVID-19 pandemic also occurred when these seniors were sophomores, which would explain why freshman (pre-COVID) to sophomore (during COVID) is the only combination of years with a positive t-statistic and therefore a decrease in social satisfaction. Many students were not able to see their friends during the pandemic; it is likely that this resulted in a decrease in social satisfaction. Our results indicate that generally, over the course of a normal (no pandemic) set of four years at Middlebury, students’ satisfaction with their friendships will change in a positive direction. This likely will lead to an increase in their overall happiness, as friendship is an important part of one’s well being. This increase is likely because people probably pare down their social circle as they get older by getting rid of low-quality friendships and solidifying high-quality friendships. Therefore, they would be more satisfied with their social life as they get older. Regardless, these results are encouraging for the many underclassmen who feel as though they haven’t found their place socially yet, or that their friendships are not of very high quality: this seems to be a common sentiment that is echoed among younger students. Our results provide hope and reassurance that things will get better for students who feel like this. 
+
+```
+
+

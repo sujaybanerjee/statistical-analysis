@@ -1,0 +1,220 @@
+---
+title: "Class Demo"
+author: "Sujay"
+date: "2022-10-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+Yo what up g
+```{r}
+x <- 5
+y <- 3
+x+y
+
+```
+
+
+Lets explore Youth Risk Behavior Surveillance System Survey
+(YRBSSS)
+
+```{r}
+library(openintro)
+library(ggplot2)
+
+ggplot(data = yrbss) +
+  geom_bar(aes(x = school_night_hours_sleep))
+
+
+
+```
+
+
+Stats inference question 1:
+Are 12yr old children in the US physically active?
+Suppose we want to test the claim that 12yr old children are active twice a week
+on average
+
+
+Prepare: Choosing a test statistic (mean of physically active data and compare to mean)
+calculate mean
+
+x-bar = 3.875
+
+Check: Survey respondents are independent
+The responses, despite being self-reported, are "true"
+We dont know the exact sampling method but there is not way our 26 12yr olds are representative of 12 yr olds in the US
+
+
+Calculate:
+
+Conclude:
+
+
+```{r}
+twelve <- subset(yrbss, age == 12)
+mean(twelve$physically_active_7d, na.rm = TRUE)
+
+table(yrbss$age)
+```
+
+
+
+Lets look at some of our oxymoronic children
+Lets find all of the students who text and drive every day    *AND*
+Lets find all of the students who always wear a helmet while riding a bicycle
+
+```{r}
+oxymorons <- subset(yrbss, text_while_driving_30d == 30 & helmet_12m == "always")
+```
+
+Lets test the claim that these students are physically active, on average 2 days per week
+
+Prepare: My test statistic, the sample average is
+
+```{r}
+mean(oxymorons$physically_active_7d, na.rm = TRUE)
+```
+
+Check: Assumptions are met
+
+Calculate:  
+```{r}
+sd(oxymorons$physically_active_7d, na.rm = TRUE)
+```
+
+
+
+t-test
+
+claim:
+mean = 2
+
+x_bar11 = 4.09
+
+s = 3.11
+
+
+```{r}
+oxymorons$physically_active_7d
+
+#Lets remove missing values
+sd(oxymorons$physically_active_7d, na.rm = TRUE)
+
+noMissing <- na.omit(oxymorons$physically_active_7d)
+
+sd(noMissing)
+
+```
+
+Lets treat these 11 values as my population
+sigma = 3.11
+```{r}
+sd(sample(noMissing, size = 3))
+
+```
+
+
+Anytime I have to estimate my population standard deviation (sigma)
+using my sample standard deviation (s), the x-bar actually follows a t-distribution
+instead of a normal distribution
+
+```{r}
+#Find middle 95% of values from N(0,1)
+qnorm(.025)
+qnorm(.975)
+```
+2.5% of my data are passed 2 standard deviations on either side
+
+
+
+Now how does this work for a t-distribution?
+
+Suppose I have n = 3
+```{r}
+n <- 3
+qt(.025, n-1)
+
+n <- 100
+qt(.025, n-1)
+```
+
+
+Suppose I want to find my middle 99% of values
+```{r}
+qnorm(.005)
+
+
+#quantile()
+quantile(na.omit(yrbss$height), .05)
+#works with actual data not theoretical like other two
+```
+
+
+
+Lets do a t-test
+
+Prepare: 
+claim is than mu = 2, x-bar_11 = 4.09, alpha = .05
+
+check:
+data are independent and randomly sampled
+(we'll assume our missing values are "missing at random")
+
+
+calculate:
+```{r}
+#Lets start with a 95% "confidence interval" - (middle 95% of values in t-distribution)
+qt(.025, 10)
+```
+
+Standard Error = s/sqrt(n)
+```{r}
+se <- sd(noMissing)/sqrt(11)
+
+t <- qt(.025, 10)
+t*se
+
+#t-statistic = t-value *s/sqrt(11)
+```
+
+95% of our data is between -.09 and 4.09, so claim is reasonable
+
+But, -.09 is not possible for activity days
+
+```{r}
+#Lets calculate a p-value
+1 - pt(2.23, 10)
+
+```
+
+
+
+How do I do a t-test() function to do all of this automatically?
+```{r}
+t.test(noMissing, mu = 2, conf.level = .95)
+```
+
+confidence interval is centered at 4.09 and seeing if 2 is in the interval 
+which is the same as centering at 2 and seeing if 4.09 is in interval
+
+
+
+Lets run the fastest t-test ever
+
+test the claim that the average height of a high schooler is 1.72m
+
+```{r}
+t.test(yrbss$height, mu = 1.72)
+```
+the t = -30 means it is 30 standard deviations away
+p value so low because the standard deviation is so small because sample size so big
+
+
+
+

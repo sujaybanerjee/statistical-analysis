@@ -1,0 +1,283 @@
+---
+title: "Test 2"
+author: "Sujay Banerjee"
+date: "2022-12-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+1) Suppose Alex is an avid fan of board games. In one particular game that he is
+playing, his character can cast a spell that shoots a beam of energy that deal
+1d4+1 damage, where 1d4 represents the roll of a four-sided die with the numbers
+1 through 4. For example, rolling a 2 means that this spell deals 2 + 1 = 3 damage.
+Suppose that every time Alex’s character levels up, he gets to shoot an additional
+beam of energy when casting this spell. Alex’s character, a level 10 wizard named
+Tom Brady, is casting this spell on a monster with 31 points of health. That is,
+this spell will shoot 10 beams of energy which each deal 1d4+1 points of damage.
+What is the probability that this monster dies with a single cast of Tom Brady’s
+spell?
+
+
+We can assume that the die Alex is playing with is a fair die before we begin. Then, in a simulation, the probability of each number is 1/4, and we would have to add one for each roll. Replicate this 10 times for the beams of energy and then again to find an accurate probability that Tom Brady can kill this monster.
+
+```{r}
+simGame <- replicate(10000, {
+  sum(replicate(10, {
+      sample(1:4, size = 1, prob = c(1/4, 1/4, 1/4, 1/4), replace = TRUE)+1
+      }))
+})
+
+hist(simGame)
+
+mean(simGame >= 31)
+
+```
+
+Based on this simulation, there is an 89.43% chance that this monster will die with a single cast of Tom Brady's spell. 
+
+
+
+2) The following four residual plots come from four distinct linear models. Describe
+specific reasons why you believe the assumptions for linear modeling appear to be
+satisfied or not satisfied for each model based on the corresponding residual plot.
+
+
+For (a), the standard deviations are not fixed as the residual plot shows a "fanning out". Since the points are spreading out, the standard deviations are increasing, and thus not fixed. The residual values are not normally distributed for any given X ~ N(0, sigma).
+
+For (b), the residual values are not normally distributed for any given X ~ N(0, sigma), meaning a residual value of mean 0 with a standard deviation of some fixed value sigma. If you tilt your head and draw normal distributions centered on the y=0 line, it does not at all encapsulate the data points on the residual plot. Just by looking at the residual plot, there appears to be a downward trend. This indicates that a part of the points are above the linear model, while the other part is below the linear model. 
+
+For (c), the residual values are also not normally distributed, as the majority of points do not fall along the center of y=0. Instead, the points fall mainly fall on either side of the y=0 line. If the vertical normal curves are drawn, this would not at all fit the data, as the majority of the points would be in the tails of the curve.
+
+For (d), I claim that the assumptions for linear modeling are satisifed as there is a nice band around y=0 on the residual plot. The data are linearly related as stated in the question. And, the residual values are normally distributed for any given X ~ N(0, sigma). The majority of the points fall in the center, with some on the edges, thus indicating a good residual plot.
+
+
+3) This question uses the absenteeism dataset from the openintro package. Is there
+statistical evidence that students of different ethnicities and sexes are absent from
+school more or less often, on average?
+
+We are testing whether there is statistical evidence that students of different ethnicities are absent from school more or less often, on average. So, we are seeing if the mean absences across the different sexes and ethnicities are equal or not. Looking at this statistical differences simultaneously is best done with an ANOVA test. 
+
+Before we can proceed with this question, we must check the assumptions of ANOVA:
+1. Data are collected with randomization, and observations are independent
+
+In the help doc, we see that the students were randomly sampled, and we have no reason to believe that there is dependence between the students' absence with each other. 
+
+2. Observations within each group are "normally" distributed
+
+```{r}
+library(ggplot2)
+library(openintro)
+
+ggplot(data = absenteeism) +
+  geom_density(aes(x = days)) +
+  facet_wrap(eth~sex)
+
+```
+Looking at the density plots, the distribution is not normal as it is right skewed. It is not possible to have negative values, so there is a right skewed distribution. We can continue on with the question for the same of the question, however.
+
+3. The sd within each group is roughly the same for all groups
+
+When looking through the dataset, there is a roughly similar variation of absences for each group. Additionally, when looking at the boxplots, there is a roughly similar spread of data within each group. 
+
+```{r}
+library(ggplot2)
+library(openintro)
+
+ggplot(absenteeism) +
+  geom_boxplot(aes(x = eth, y = days, fill = factor(sex)))
+
+```
+
+
+We can continue with our ANOVA test.
+
+alpha = 0.05
+
+```{r}
+
+library(openintro)
+
+absence <- aov(days ~ eth + sex + sex:eth, data = absenteeism)
+summary(absence)
+
+TukeyHSD(absence, conf.level = .95)
+
+```
+When looking at the ANOVA test summary, we see that ethnicity is a significant of absences as the p-value is below the set alpha of 0.05. The null hypothesis was that the means of absences of the different ethnicities are equal. With the p-value below 0.05, we can conclude that the differences between ethnicity means are statistically different. When looking at the Tukey multiple comparisons of means, we see that for ethnicity, the 95% confidence interval does not include 0. This means that it is not plausible for the mean absences of non-Aboriginal to Aboriginal to be equal to 0, meaning that they are not equal. Sex on the other hand, includes 0 in the 95% confidence interval, which means it is plausible for the mean absences to be equal. When looking at the interaction between ethnicity and sex, there are only two combinations in which there is a significant difference in mean absences. The mean absence difference between non-Aboriginal females and Aboriginal females is significant as the p-value is 0.01--less than alpha--and the 95% confidence interval does not include 0. Therefore, Aboriginal females have a higher mean absence than non-Aboriginal females. The mean absence difference between Aboriginal males and non-Aboriginal females is also significant as the p-value is 0.01 and the 95% confidence interval does not include 0. This indicates that Aboriginal males are absent from school more often that non-Aboriginal females, on average. Therefore, there is a statistical evidence that students of different ethnicities and sexes are absent from school more or less often, on average.
+
+
+4) Research shows that at a backyard barbecue, a meat-eating American eats, on
+average, 2 hot dogs with a standard deviation of 1 hot dog. Suppose you wish to
+test this claim. You plan to randomly select 50 meat-eating Americans, spy on
+them with binoculars, and carefully count how many hot dogs they eat at their
+backyard barbecue. Explain—without any statistical jargon—what a Type I error
+and Type II error would be in this specific context. At the alpha = 0.01 level, how
+many hot dogs would Americans have to truly eat on average for the power of your
+test to be equal to 0.9?
+
+
+A Type I error in this case would be saying meat-eating Americans don't eat--on average--2 hot dogs at a backyard barbecue, but they actually do. 
+
+A Type II error on the other hand would be saying that meat-eating Americans do eat--on average--2 hot dogs at a backyard barbecue, but they actually do not. 
+
+
+```{r}
+#set alpha
+alpha <- .01
+
+#set n
+n <- 50
+
+#claimed mean
+claimedMean <- 2
+
+#claimed sd
+claimedSd <- 1
+
+#true mean
+trueMean <- 2.511
+
+#type 1 error
+cutoff <- qnorm(1-alpha, mean = claimedMean, sd = claimedSd/sqrt(n))
+
+
+#type 2 error
+type2 <- pnorm(cutoff, mean = trueMean, sd = claimedSd/sqrt(n))
+
+
+
+#power 
+1-type2
+
+```
+
+Therefore, at an alpha of 0.01, Americans would have to eat on average 2.511 hot dogs at backyard barbecues for the power of my test to be 0.9.
+
+
+
+
+5) In the early 2010s, many tennis spectators complained about the increasing length
+of professional tennis matches. In this question, we’ll try to investigate these claims.
+(It may be helpful to know that mens professional tennis is played in a best-of-
+five format, where the first player to win three sets wins the match.) Using the
+tennis serve time dataset from the fivethirtyeight package in R, build a linear model
+using set number and date to predict the time in seconds between the end of the
+the point and the start of the next serve. Based on your linear model, interpret
+your findings in the context of the problem. You may assume that the serve data
+provided in this data set are a random sample of serves from the 2015 French Open.
+
+Before we begin with our linear model, we must check the assumptions:
+
+1. Data values independent and collected using randomization.                                                                                                                            
+The question says that we can assume that the serve data in the data set are a random sample of serves from the 2015 French Open. For independence however, I have a few concerns. I am a fan of watching tennis and I know some players have their rituals before they begin their serve, most notably Rafael Nadal. He wipes his sweat, undoes his wedgie, and tucks his hair back before he serves. There are other players that will deliberately switch up the time between their serves to throw off their opponents. Looking at different players across those days definitely plays a role in the the data that we see. I think inherently with serves in tennis, it does not really depend on the set and dates because there are usually a lot of other factors that play a role. For example, if there was a longer point played right before, the server may take more time to catch his breath and wipe their face before serving again for the next point. There could also be a crucial point in the game where if the point is lost, the server would lose the set. In these cases, I think the server would take more time to relax and serve into the box because the game/set depends on it. These reasons would prevent us from generalizing serve time to a population. By looking at date and set, these factors are not really being taken into account, but we can make the model anyway. We can assume that the data values are independent for the sake of the question and continue.
+
+2. Residual values are normally distributed for any given X ~N(0, sigma).
+
+To see the residual values, I made a linear model. After looking at the Residual vs Fitted plot for our model, I am slightly concerned about the normality of the residuals. If vertical normal curves are drawn across the residual plot, there is a varied spread of residuals centered around the y= 0 with the majority not clearly being around y=0, but we can continue as if it is good enough to claim normal distribution. Additionally, looking at the normal Q-Q plot, the residual plot looks very linear, which means our residual values are normally distributed. There is also some fixed standard deviation sigma that our data is distributed with because the data variation looks relatively fixed.
+
+
+3. Data are linearly related.
+
+To check this assumption, I made a scatter plot to see if the data are linearly related. There are vertical lines of points ranging from all the values of observed seconds in between serves for each set. Having a line that goes through these points makes me uncomfortable as it just feels like I am drawing a line through points that do not really have a strong relationship with each other but it should work. One thing I do see is that there seems to be more seconds between serve on day 1 set 1 than day 3 set 3. When looking at the variables separately, there seems to be visually a weak slightly negative relationship between the days and seconds in between serves. Looking at sets, there visually seems to be a weak slightly positive relationship between set and the seconds in between serves. But there are different players playing on those days that could be the case for that. We can assume the data are linearly related to proceed. For the purposes of continuing with the question, we can move on. 
+
+I think the assumptions may violated but we can make a model anyway because that is what the question wants.
+alpha = 0.05
+
+```{r}
+library(ggplot2)
+library(fivethirtyeight)
+
+
+
+ggplot(tennis_serve_time) + 
+  geom_point(aes(x = set, y = sec_between, color = factor(date)))
+
+ggplot(tennis_serve_time) + 
+  geom_point(aes(x = date, y = sec_between, color = factor(set)))
+
+```
+
+
+
+```{r}
+library(fivethirtyeight)
+
+
+serveModel <- lm(sec_between ~ set + factor(date), data = tennis_serve_time)
+summary(serveModel)
+
+plot(serveModel)
+```
+
+
+```{r}
+predict(serveModel, tennis_serve_time)
+```
+Looking at the linear model for the tennis serve data, we get the equation:
+
+seconds in between serve = 20.4918 + 1.3530(set) - 6.7222(day 2) - 10.3930(day 3)
+
+I used the predict function to see how the predicted seconds in between would compare to all the data values. Looking at what I got, it seems to fit in with the data.
+
+
+The adjusted R^2 value of our model is 0.3585 which means that 36% of the variation we see is explained by set and date. Looking at the p-value for day 2(5.20e-08) day 3(9.73e-11) and the coefficients (-6.7222) and (-10.3930), date seem to be an extremely significant predictor of seconds in between serve. Looking at the p-value for set (0.00662) and the coefficient (1.3530), set number also seems to be a quite significant predictor of seconds in between serve. The low p-values indicate that it is highly unlikely that these were obtained due to random chance. Looking at our linear model, for each set increase, we should add 1.3530 seconds to the seconds in between serves. For day 2 of the French Open, we should subtract 6.7222 seconds from the seconds in between serves. And for day 3 of the French open we should subtract 10.3930 seconds from the seconds in between serves. The y-intercept is 20.4918 which means for a set of 0 and a day of 0, we would expect the seconds between serve to be 20.4918, but this does not make sense as there is no set 0 in tennis and no day 0 of the tournament. 
+
+
+
+
+6) The table below depicts a random sample of games played by Manchester United,
+an English soccer team, over the last 50 years. Games could either end in a win,
+tie, or loss, and games were either played at home, away, or at a neutral stadium.
+Win Tie Loss
+Home 61 20 12
+Away 39 24 35
+Neutral 15 12 15
+Determine if there is a significant relationship between game outcome and game
+location. Describe your findings in detail and in the context of the problem.
+
+In this question, we can do a chi-square test to see if there is a significant relationship between game outcome and game location. The claim is that there is no relationship between game location and game outcome. 
+alpha = 0.05
+
+Before we proceed, we have to check the assumptions of a chi-square test:
+
+
+1. Data are collected with randomization
+
+The data are collected with randomization as stated in the question
+
+2. Data are independent
+
+We can assume that the data are independent to continue. However, there may be the case where if the team is on a losing streak, they may be less likely to win as they would be demoralized. But we can continue assuming that this doesn't play a huge role.
+
+3. All expected cell counts >= 5
+
+All expected cell counts are greater than 5
+
+The assumptions are met and we can proceed.
+
+```{r}
+manU <- matrix(c(61, 39, 15,
+                 20, 24, 12,
+                 12, 35, 15), nrow = 3, ncol = 3)
+
+colnames(manU) <- c("Win", "Tie", "Loss")
+
+rownames(manU) <- c("Home", "Away", "Neutral")
+manU
+```
+
+```{r}
+chisq.test(manU)
+
+
+chisq.test(manU)$residuals
+chisq.test(manU)$residuals^2
+chisq.test(manU)$expected
+
+```
+Based on the results of the chi-square test, the p-value of 0.0005 is less than the alpha of 0.05 which indicates that there is sufficient evidence to conclude that the observed values are significantly different than the expected values. This means that there is a significant relationship between the game outcome and the game location. Chi-square residuals are the difference between observed and expected values for each cell. Larger absolute value of residuals correspond to a greater contribution of the cell to the chi-squared value. When looking at the residuals^2 of this chi-square test, we see that the largest contributions are when there is a win or loss at home. This means that a loss at home is much different than what we would expect given the claim that there is no relationship between game outcome and game location. Similarly, a win at home is much different than what we would expect given the claim that there is no relationship between game outcome and game location. And when looking at the residuals, the loss at home indicates Manchester United lost less than expected, and a win at home indicates Manchester United won more than expected. Therefore, it is more likely that Manchester United would win at home and less likely that they would lose at home. This information, however, is just about those 50 years of soccer games and we cannot generalize this to the future. This also indicates a relationship between game outcome and game location.
+

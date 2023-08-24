@@ -1,0 +1,275 @@
+---
+title: "HW 3"
+author: "Sujay Banerjee"
+date: "2022-11-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1)
+
+6.13 Taste test. Some people claim that they can tell the difference between a diet soda and a regular soda
+in the first sip. A researcher wanting to test this claim randomly sampled 80 such people. He then filled 80
+plain white cups with soda, half diet and half regular through random assignment, and asked each person
+to take one sip from their cup and identify the soda as diet or regular. 53 participants correctly identified
+the soda.
+
+
+(a) Do these data provide strong evidence that these people are any better or worse than random guessing
+at telling the difference between diet and regular soda?
+
+Prepare:
+Just guessing by random chance, we would expect 40 people to correctly identify the soda and 40 people to incorrectly identify the soda, or 50% correctly identifying the soda. 
+Based on the question, 53/80 = .6626 or 66.25% of people would correctly identify the soda.
+The test statistic is the proportion of participants that correctly identified the diet soda. (p = .6625) being tested against the null hypothesis (p = .50)
+alpha = .05
+
+Check:
+
+To use CLT for proportions, we can assume that the data independent and randomly sampled. 
+The success-failure conditions must also be met: np_0 >= 10 and n(1-p_0) >= 10, which is met because n = 80 and p_0 = .50
+
+
+Calculate:
+```{r}
+p <- .5
+n <- 80
+se <- sqrt((p*(1-p))/n)
+se
+```
+```{r}
+p - 2*se
+p + 2*se
+```
+Based on this range, we can conclude that 95% of the data fall between 39% and 61% correctly identifying the diet soda. Our observed proportion is outside of this range, at 66%, therefore it is likely that these people are better at identifying diet soda.
+
+
+```{r}
+pnorm(.6625, mean = .5, sd = se, lower.tail = FALSE)
+```
+
+(b) Interpret the p-value in this context.
+
+Based on the p-value of .0018, there is only a .18% chance that we would see the observed proportion assuming that people are only randomly guessing. This is very unlikely, so we can conclude that this group of people is better at identifying the diet soda than just randomly guessing. The p-value is below our alpha of .05, so we can reject null hypothesis that the proportion of people that can correctly identify the diet soda is 50%. 
+
+
+2)
+
+6.33 Open source textbook. A professor using an open source introductory statistics book predicts that
+60% of the students will purchase a hard copy of the book, 25% will print it out from the web, and 15%
+will read it online. At the end of the semester he asks his students to complete a survey where they indicate
+what format of the book they used. Of the 126 students, 71 said they bought a hard copy of the book, 30
+said they printed it out from the web, and 25 said they read it online.
+
+(a) State the hypotheses for testing if the professor’s predictions were inaccurate.
+
+Null hypothesis: the professor expects 60% of the students to purchase the hard copy textbook, 25% to print out the textbook, and 15% to read it online
+
+Alternate hypothesis: The proportions would differ significantly from the proportions expected by the professor not due to random chance.
+
+(b) How many students did the professor expect to buy the book, print the book, and read the book
+exclusively online?
+
+The professor expected 75.6 students to buy the hard copy, 31.5 to print the book, and 18.9 to read it online.
+
+(c) This is an appropriate setting for a chi-square test. List the conditions required for a test and verify
+they are satisfied.
+
+1. The data are randomly collected
+  We can assume that the responses of the students from the survey are randomly collected
+2. Data are independent
+  We can assume that the professor did not suggest a certain format of the book, and therefore being independent
+3. Each cell count must have at least 5 expected cases
+  There are more than 5 students in each cell count
+
+(d) Calculate the chi-squared statistic, the degrees of freedom associated with it, and the p-value.
+
+Prepare: The test statistic is the chi-squared statistic. alpha = .05
+
+Check: listed above
+
+Calculate:
+```{r}
+books <- matrix(c(71, 30, 25),
+                nrow = 3,
+                ncol = 1)
+colnames(books) <- c("Actual")
+rownames(books) <- c("Hard Copy", "Print", "Online")
+
+
+chisq.test(books, p = c(.6, .25, .15))
+
+```
+
+(e) Based on the p-value calculated in part (d), what is the conclusion of the hypothesis test? Interpret
+your conclusion in this context.
+
+This p-value of 0.31 means it is relatively likely that the expected number of students buying each format of the textbook was not significantly different than the actual values. The p-value is above our alpha of 0.05, meaning that we can fail to reject the null hypothesis of the proportions of students who got each format of the textbook. Thus, the observed differences are likely due to random chance.
+
+
+
+3)
+
+6.48 2010 Healthcare Law. On June 28, 2012 the U.S. Supreme Court upheld the much debated 2010
+healthcare law, declaring it constitutional. A Gallup poll released the day after this decision indicates that
+46% of 1,012 Americans agree with this decision. At a 95% confidence level, this sample has a 3% margin of
+error. Based on this information, determine if the following statements are true or false, and explain your
+reasoning. (Note that the Margin of Error is defined as half the width of a confidence
+interval, or equivalently how wide your interval extends from either side of the mean
+value.)
+
+
+(a) We are 95% confident that between 43% and 49% of Americans in this sample support the decision of
+the U.S. Supreme Court on the 2010 healthcare law.
+
+This statement is false because we know the proportion of people that agree in the sample is 46% and the margin of error is 3% for the confidence interval.
+Thus, the 95% confidence interval of the population would be from 43% to 49%, and not the sample.
+
+(b) We are 95% confident that between 43% and 49% of Americans support the decision of the U.S. Supreme
+Court on the 2010 healthcare law.
+
+This statement is true because the proportion of people that agree in the sample is 46% and the margin of error is 3%. 
+Since the margin of error is half of the width of a confidence interval, the 95% confidence interval would have a center of 46% and extend 3% in
+either direction. Thus, we would be 95% confident that between 43% and 49% of Americans in this sample support the 
+decision of the US Supreme Court on the healthcare law. 
+
+
+(c) If we considered many random samples of 1,012 Americans, and we calculated the sample proportions
+of those who support the decision of the U.S. Supreme Court, 95% of those sample proportions will be
+between 43% and 49%.
+
+```{r}
+sim <- replicate(200000, {
+mean(sample(0:1, size = 1012, replace = TRUE, prob = c(.54, .46)))
+})
+
+mean(sim <= .43)
+mean(sim >= .49)
+```
+After running a simulation, approximately 3% of the sample proportions were below 43% and around 3% of the sample 
+proportions were above 49%. Based on this, it appears that 94% of the sample proportions will be between 43% and 49%. 
+This is not 95%, so this statement is false.
+
+
+(d) The margin of error at a 90% confidence level would be higher than 3%.
+
+This statement is false because with a 90% confidence interval, there would be less of a margin of error in either direction. 
+
+
+
+4)
+
+Suppose you learn that Alex and his wife Shannon have both measured their happiness 
+(on a scale from 1 to 5, with 1 being very sad and 5 being very happy)
+once a day over the past several years. Through unscrupulous means, you are able
+to obtain the following data, which represent each of their happiness ratings for a
+seven randomly-selected days over the past several years. Determine if there is a
+difference in the average happiness levels between Alex and Shannon. Be sure to
+justify your approach.
+
+Alex: 4,3.5,5,4.5,2,5,5
+Shannon: 2.5,3,4.5,3,1,4.5,5
+
+
+```{r}
+
+alex <- c(4,3.5,5,4.5,2,5,5)
+shannon <- c(2.5,3,4.5,3,1,4.5,5)
+
+mean(alex)
+mean(shannon)
+
+diff <- mean(alex) - mean(shannon)
+diff
+
+
+```
+
+Prepare: Our test statistic is the difference between the mean happiness levels of Alex and Shannon. 
+We are testing if this is significantly different than 0 because that would be if there was no difference 
+in happiness levels.
+alpha = 0.05
+
+
+Check:
+We can assume that the happiness values are randomly selected and not dependent on previous days.
+
+Calculate:
+```{r}
+t.test(alex, shannon, paired = TRUE)
+```
+Conclude:
+
+Based on the p-value of 0.01, we can say that there was a statistically significant difference between the happiness levels of 
+Alex and Shannon. The p-value was below our alpha, so we can reject the claim that there was no difference between the happiness 
+levels of Alex and Shannon. Alex is significantly happier than Shannon.
+
+
+
+5) 
+
+Suppose Alex is an avid Dungeons and Dragons fan. In Dungeons and Dragons,
+players roll dice to determine what happens in the game. After Alex watches his
+friend Rick roll large values on his d8 dice (an eight-sided die with values 1 through 8) with 
+suspicious consistency, he accuses Rick of cheating by using a biased die. To demonstrate this alleged 
+cheating, Alex plans to roll Rick’s d8 several times and record the mean of the results. Alex is aware of 
+only one kind of biased d8—a die that has a 50% chance of rolling and 8 and an equal chance of 
+rolling any other value. This whole scenario has increased the tension in the room dramatically.
+
+The table below shows the ‘emotional change’ of each of the corresponding events
+that might occur. In this metric, positive values are associated with good events,
+and negative values are associated with bad events. Suppose that Alex is committed
+to rolling the questionable d8 a total of n = 30 times and calculate the mean value
+the n = 30 rolls of the die. How should Alex optimally set his α value to maximize
+the emotional change in the room? (Nobody is leaving this room happy, but the
+goal is to minimize the damage!) You may assume that Alex genuinely has no idea
+if Rick is cheating, but if he is cheating, it can only be with the biased die described
+above.
+
+
+Type 1 error: Alex incorrectly accuses Rick of cheating
+Type 2 error: Alex incorrectly concedes that Rick is not cheating
+
+```{r}
+
+biased_dice <- replicate(10000, {
+  mean(sample(1:8, size = 30, replace = TRUE, prob = c(.0714,.0714,.0714,.0714,.0714,.0714,.0714,.5)))
+})
+biasedMean <- mean(biased_dice)
+biasedSd <- sd(biased_dice)
+
+fair_dice <- replicate(10000, {
+  mean(sample(1:8, size = 30, replace = TRUE))
+})
+
+fairMean <- mean(fair_dice)
+fairSd <- sd(fair_dice)
+
+
+
+n <- 30
+#alpha <- .0617
+alpha <- seq(from = .001, to = .1, by = .00001)
+
+
+
+#type 1 error
+cutoff <- qnorm(1-alpha, mean = fairMean, sd = fairSd)
+
+
+#type 2 error
+type2 <- pnorm(cutoff, mean = biasedMean, sd = biasedSd)
+
+
+#minimize damage
+E <- 30 - 50*(alpha) - 100*(type2)
+which.max(E)
+alpha[6071]
+
+```
+Alex should set his alpha value to .0616, as that would minimize the emotional change in the room. 
+
+

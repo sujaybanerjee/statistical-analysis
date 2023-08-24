@@ -1,0 +1,237 @@
+---
+title: "Test 1"
+author: "Sujay Banerjee"
+date: "2022-10-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+1) The lifespans of light bulbs are known to follow an exponential distribution. The
+exponential distribution, often denoted exp(β), is characterized by a single mean
+parameter β. The exponential distribution has a unique property that its standard
+deviation is equal to its mean. Suppose you order 100 light bulbs known to each
+have lifespans (in years) distributed according to exp(4). What is the probability
+that the average lifespan of your 100 light bulbs exceeds 5 years?
+
+prepare:
+x-bar = 4, alpha = .05
+We need to calculate the rate lambda: 1/4
+
+check:
+We can assume the sample of ordered lightbulbs are random and independent (no lightbulb's lifespan affects any others') following an exponential distribution.
+
+calculate:
+```{r}
+pexp(5, rate = 1/4, lower.tail = FALSE)
+```
+
+Based on the exponential distribution, there is a 28.6% chance that the average lifespan of the 100 lightbulbs exceeds 5 years. The function pexp() calculates the cumulative area under the curve, and the area under the curve above 5 is .286, which is above the alpha value of 0.05. 
+
+
+
+
+3) This question utilizes the BookPrices data set found in the resampledata package
+in R. This dataset contains the book prices of all textbooks at a specific university.
+Formally test the claim that the average price of Math & Science books at this
+university is equal to $150.
+
+
+prepare: 
+claim is x_bar = 150 , alpha = .05
+
+
+check: 
+The Math and Science textbooks used at a university could be the better textbooks and  may be more expensive, but we can assume the textbooks are independent and a random sample was drawn to continue since we 
+are comparing to a price
+
+
+```{r}
+library(resampledata)
+mathScience <- subset(BookPrices, Area == "Math & Science")
+
+hist(mathScience$Price)
+
+meanPrice <- mean(mathScience$Price)
+meanPrice
+
+sdPrice <- sd(mathScience$Price)
+sdPrice
+
+
+
+t.test(mathScience$Price, mu = 150)
+
+
+```
+Based on the results of the t-test, we can say that the claim of the average price of the Math and Science textbooks at this university being $150 is plausible. $150 falls within our 95% confidence interval, therefore it is plausible. Additionally, the p-value is 0.37, which means that it is relatively likely that the average price of the Math and Science textbooks at this university is equal to $150. 
+
+
+
+
+
+4) Suppose Alex is interested in students’ favorite colors at Middlebury College. He
+randomly surveys 13 students at Middlebury and asks them: “What is your favorite
+color?” The responses of each of the 13 students are shown below:
+Red, Green, Yellow, Red, Blue, Blue, Red, Blue, Orange, Black, Green, Red, Blue
+Formally test the claim that red is the favorite color of 10% of Middlebury students.
+
+
+prepare:
+claim that red is mean favorite color in 10% of students, alpha = .05
+
+check:
+the survey is randomly sampled and we can assume the data is independent (each student didn't hear the responses of others)
+
+
+
+```{r}
+colors<- c("Red", "Green", "Yellow", "Red",
+           "Blue", "Blue", "Red", "Blue", 
+           "Orange", "Black", "Green", "Red", "Blue")
+
+table(colors)
+```
+
+
+```{r}
+bootRed <-replicate(10000,{
+  mean(sample(0:1, size = 13, replace = TRUE, prob = c(9/13, 4/13)))
+})
+
+hist(bootRed)
+
+mean(bootRed)
+sd(bootRed)
+```
+
+
+```{r}
+quantile(bootRed, c(.025, .975))
+```
+Using the quantile function, we see that the 95% confidence interval for the proportion of Middlebury students that say red is their favorite color falls between 7.7% and 53.8%. Therefore, the claim that red is the favorite color of 10% of Middlebury students is a plausible claim since it falls within this interval, but it is on the borderline of not being in the 95% confidence interval. We can accept the claim as plausible, but since it is close to not being plausible, we can remain a bit skeptical.
+
+
+
+
+
+
+
+5) Construct a graph that visually depicts the relationship between a professor’s gen-
+der, rank, evaluation score, and average beauty rating. Using your graph, describe
+in as much detail as possible the relationship between these four variables in the
+context of the data.
+
+
+check:
+Based on the dataset info, we see that 6 students rated the professor's physical appearance. We do not know the genders of these students as that could play a role in introducing bias. We can assume that the sample of 94 professors from UT Austin was randomly sampled and independent. The ratings of one professor should not affect the ratings of another professor.
+
+
+
+```{r}
+library(openintro)
+
+prof <- data.frame(gender = evals$gender,
+                   rank = evals$rank,
+                   evalScore = evals$score,
+                   beauty = evals$bty_avg)
+
+ggplot(data = prof) + 
+  geom_tile(aes(x = rank, y = evalScore, fill = beauty)) +
+  geom_text(aes(label = gender), x = evals$rank, y = evals$score,check_overlap = TRUE, color = "white", size = 2) +
+  coord_fixed() +
+  theme_classic() + 
+  labs(title = "Professors at UT Austin")
+
+
+```
+Based on this graph, it appears that in the teaching rank, the male professors who have a higher beauty rating also have a higher evaluation score. Contrarily, in the teaching rank, the female teachers with a lower beauty rating also have a lower evaluation score. In the tenure track rank, there seem to be many more females than males, and the evaluation score and beauty rating do not seem to be related as much as the teaching track---the lower beauty rated females also have the highest evaluation score. In the tenured rank, there seem to be lower beauty ratings overall. There are also more males tenured than females in this sample. Of the tenured professors rated highly of the beauty scale, they were all female. 
+
+
+
+
+
+
+6) Provide a range of plausible values for the mean evaluation score of male professors
+and one for the mean evaluation scores of female professors. Interpret and compare
+these two intervals in context. 
+
+
+prepare: 
+We can find the mean evaluation scores for male and female professors
+
+```{r}
+maleProfs <- subset(prof, gender == "male")
+femaleProfs <- subset(prof, gender == "female")
+```
+
+```{r}
+meanEvalF <- mean(femaleProfs$evalScore)
+meanEvalF
+hist(femaleProfs$evalScore)
+
+meanEvalM <- mean(maleProfs$evalScore)
+meanEvalM
+hist(maleProfs$evalScore)
+
+```
+
+
+check:
+Based on the dataset info, we see that the evaluation scores are based on the end of the semester student evaluations for 463 courses taught by a sample of 94 professors. We can assume that the sample of 94 professors from UT Austin was randomly sampled and is independent since we do not know which rank they are to attribute a dependence on beauty playing a factor between the genders. The evaluation score of any one professor should not depend on the evaluation score of another professor.
+
+
+```{r}
+sdEvalF <- sd(femaleProfs$evalScore)
+sdEvalF
+
+
+sdEvalM <- sd(maleProfs$evalScore)
+sdEvalM
+```
+
+calculate:
+```{r}
+quantile(femaleProfs$evalScore, c(.025, .975))
+```
+```{r}
+quantile(maleProfs$evalScore, c(.025, .975))
+```
+The calculated range of plausible mean evaluation scores for female professors is 2.9 to 4.9. The calculated range of plausible mean evaluation scores for male professors is 3.1 to 5.0. Based on this data, the male professors have slightly higher overall evaluation scores in the 95% confidence interval. The mean evaluation scores for male professors is 4.23 with a standard deviation of 0.52. On the other hand, the mean evaluation scores for female professors is 4.09 with a standard deviation of 0.56. Therefore, from this sample of professors, there is a slightly higher average evaluation score for the male professors with a smaller standard deviation than the female professors.
+
+
+
+
+7) Formally test the claim that professors at the University of Texas at Austin under
+the age of 50 have an average evaluation score of 4.3.
+
+
+prepare:
+claim that professors under 50 have an average evaluation score of 4.3
+
+check: 
+Based on the dataset info, we see that the evaluation scores are based on the end of the semester student evaluations for 463 courses taught by a sample of 94 professors. We can assume that the sample of 94 professors from UT Austin was randomly sampled and is independent. 
+
+```{r}
+youngProfs <- subset(evals, age < 50)
+```
+
+```{r}
+evalMean <- mean(youngProfs$score)
+evalMean
+
+evalSd <- sd(youngProfs$score)
+evalSd
+
+hist(youngProfs$score)
+```
+```{r}
+
+quantile(youngProfs$score, c(.025, .975))
+```
+Based on the 95% confidence interval above, the claimed mean evaluation score of professors under the age of 50 (4.3) falls directly within the range of plausible values of 3.0 to 4.9. Therefore, we can say that the claim that the average evaluation score of professors under the age of 50 is 4.3 is quite plausible. 
+
+

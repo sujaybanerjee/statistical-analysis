@@ -1,0 +1,153 @@
+---
+title: "HW2"
+author: "Sujay"
+date: "2022-10-18"
+output: html_document
+---
+```{r}
+gallupTaboo<- read.csv("/Users/suj/Downloads/GallupTaboo.csv")
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+(1) It is believed that 8% of all children are nearsighted. In a random sample of n = 300
+children, what is the fewest number of children who could be nearsighted for you
+to still believe the claim of 8% nearsightedness?
+
+
+conduct a simulation to see
+
+```{r}
+simKids <- replicate(10000, {
+  sum(sample(0:1, size = 300, prob = c(.92, .08), replace = TRUE))
+})
+
+quantile(simKids, .025)
+quantile(simKids, .975)
+```
+After a simulation was run and the quantile function was used, the middle 95% of the simulated values occur between 15 and 34. Therefore, the lowest number of children to still believe this claim would be 15 kids, because below that would be less than 2.5% likely, and therefore very rare. 
+
+
+
+
+(2) The IQ test—a questionable measure of intelligence—is known to have a mean
+score of μ = 100 with a standard deviation of σ = 15. Provide a range of plausible
+values for the average IQ test score in a random sample of n = 25 people.
+
+prepare:
+x_bar = 100
+```{r}
+sd <- 15/sqrt(25)
+sd
+```
+
+check:
+The question states there is a random sample, and we can assume that the test was conducted in a way that is independent.
+
+calculate: 
+```{r}
+mean <- 100
+
+
+mean + 2*sd
+mean - 2*sd
+
+
+```
+
+A range from IQ of 94 to 106 would be 95% of the sample. These are the plausible values, but obviously there are people above and below this range. 
+
+
+
+
+
+
+(3) Suppose someone claims that the average salary in the US is $50,000. Use the
+GallupTaboo.csv data from Lab 3 to formally test this claim using whatever ap-
+proach you prefer. Be sure to justify your answer!
+
+
+
+prepare:
+```{r}
+salaryAvg <-mean(gallupTaboo$Salary)
+salaryAvg
+```
+x_bar = $56232
+This is the average salary in the US from our data set
+alpha = 0.05
+
+
+check:
+Assuming a random sample and independent data
+Though question does not state, we can assume that the GallupTaboo dataset was properly collected
+
+calculate:
+```{r}
+salarySt <- sd(gallupTaboo$Salary)
+sampleSalarySt <- salarySt/sqrt(100)
+
+pnorm(56232, mean = 50000, sd = sampleSalarySt, lower.tail = FALSE)
+
+```
+Based on a p-value of .002, there is only a 0.2% chance that the average US salary is $50,000 based on our data.
+Our obtained p-value is less than the 0.05 initially set as well. Therefore, it is very unlikely that this someone's claim is true. 
+
+
+
+
+(4) A scientist from New York City has asked you to investigate Ozone levels from the
+early 1970s. Using the airquality dataset built into R (you can access this dataset
+by simply typing airquality in R, and you can see the help documentation for this
+dataset by typing ?airquality), test the claim that the average wind speed during
+the summer months of 1973 was 10 mph.
+
+
+  The question does not say how the data was collected and if it is a random sample and independent.
+Though, I do not think it is possible to assume that the data are independent because if there is 
+a windy day, then the next days are also likely windy. Also, the wind speeds were measured at LaGuardia airport, which would bias the data due to planes flying nearby. This means that the data is dependent because one day of wind affects another. 
+
+
+
+
+
+(5) Suppose President Laurie Patton claims that Middlebury Students are some of the
+happiest students in the country! Citing internal data, she notes that the average
+happiness of Middlebury students is 85 (on a scale from 1 to 100). Suppose you
+are using the same measure of happiness, and you collect a simple random sample
+of n = 30 students. You obtain the following data:
+97,89,87,76,86,90,85,82,95,87,88,53,89,85,76,
+65,85,100,57,70,78,92,59,93,96,72,69,72,76,74
+What would you conclude about President Patton’s claim in context?
+
+
+prepare: 
+find mean of sample x_bar
+```{r}
+sampleHappy <- (c(97,89,87,76,86,90,85,82,95,87,88,53,89,85,76,
+65,85,100,57,70,78,92,59,93,96,72,69,72,76,74))
+sampleMeanHappy <- mean(c(97,89,87,76,86,90,85,82,95,87,88,53,89,85,76,
+65,85,100,57,70,78,92,59,93,96,72,69,72,76,74))
+sampleMeanHappy
+```
+x-bar = 80.77 on a happiness scale
+alpha = 0.05
+
+
+check:
+The question states a simple random sample and we can assume data are independent
+
+
+calculate:
+```{r}
+
+sampleStHappy <- sd(sampleHappy)/sqrt(30)
+
+pnorm(80.77, mean = 85, sd = sampleStHappy)*2
+```
+
+Based on our obtained p-value of 0.059, there is only a 5.9% chance that Laurie's claim is correct. This is quite unlikely, but it is above our alpha of 0.05, meaning we can't absolutely reject the Laurie's claim that the average happiness of students at Middlebury is 85. But, we also cannot easily accept her claim because the p-value is still quite low and barely above alpha. So, we can proceed with believing her for now but we are still skeptical.
